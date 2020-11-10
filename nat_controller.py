@@ -74,6 +74,7 @@ class NatController(app_manager.RyuApp):
         if dst_mac in self.switch_table:
             dst_port = self.switch_table[dst_mac]
         else:
+            print("_-----------HEREEEEEEHELLLLLO--------------")
             dst_port = of_packet.datapath.ofproto.OFPP_FLOOD
         self.send_packet(of_packet.data, of_packet, dst_port, actions=actions)
 
@@ -167,6 +168,7 @@ class NatController(app_manager.RyuApp):
             if self.send_arp_reply(of_packet, data_packet) == None:
                 self.switch_forward(of_packet, data_packet)
         if data_packet[1].opcode == 2:
+            print("--------OPCODE 2-------")
             self.switch_forward(of_packet, data_packet)
 
     def send_arp_request(self, ip, of_packet, match, actions):
@@ -272,25 +274,32 @@ class NatController(app_manager.RyuApp):
     def handle_incoming_internal_msg(self, of_packet, data_packet):
         '''Handles a packet with destination MAC equal to internal side of NAT router.'''
         
-        checkForExtDstIp = [config.nat_internal_ip.split('.')[0], config.nat_internal_ip.split('.')[1]]
-        dst_ip = data_packet[1].dst
-        if checkForExtDstIp[0]not in dst_ip or checkForExtDstIp[1] not in dst_ip:
-            # print("sending ip packet to gateway router...")
-            # parser = of_packet.datapath.ofproto_parser
-            # actions = [parser.OFPActionSetField(ipv4_src = '4.4.2.1'), parser.OFPActionSetField(tcp_src = 2)]
-            # self.send_packet(of_packet.data, of_packet, 1, actions)
-            self.send_arp_request(config.nat_internal_ip, of_packet, None, None)
+        # checkForExtDstIp = [config.nat_internal_ip.split('.')[0], config.nat_internal_ip.split('.')[1]]
+        # dst_ip = data_packet[1].dst  ## dest ip external host
+        # if checkForExtDstIp[0]not in dst_ip or checkForExtDstIp[1] not in dst_ip:
+        #     # print("sending ip packet to gateway router...")
+        #     # parser = of_packet.datapath.ofproto_parser
+        #     # actions = [parser.OFPActionSetField(ipv4_src = '4.4.2.1'), parser.OFPActionSetField(tcp_src = 2)]
+        #     # self.send_packet(of_packet.data, of_packet, 1, actions)
+        #     self.send_arp_request(config.nat_internal_ip, of_packet, None, None)
 
-        else :
-            out_port = None
-            dst_mac = data_packet[0].dst
-            if dst_mac in self.switch_table:
-                out_port = self.switch_table[dst_mac]
-                parser = of_packet.datapath.ofproto_parser
-                match = parser.OFPMatch(in_port= of_packet.match['in_port'], eth_dst=dst_mac)
-                actions = [parser.OFPActionOutput(out_port)]
-                self.add_flow(of_packet.datapath, match, actions)
-            self.switch_forward(of_packet, data_packet)
+        # else :
+        #     out_port = None
+        #     dst_mac = data_packet[0].dst # router mac 
+        #     if dst_mac in self.switch_table:
+        #         out_port = self.switch_table[dst_mac]
+        #         parser = of_packet.datapath.ofproto_parser
+        #         match = parser.OFPMatch(in_port= of_packet.match['in_port'], eth_dst=dst_mac)
+        #         actions = [parser.OFPActionOutput(out_port)]
+        #         self.add_flow(of_packet.datapath, match, actions)
+        #     self.switch_forward(of_packet, data_packet)
+        
+        # turn local src_ip into public routers ip 7.7.7.7 
+        # ip 192.168.0.1 src_port 47182  to ip 4.4.1.2 dest_port 80
+        # add maping to flow table 
+        # internal              |  external 
+        # 192.168.0.1:src_port1  |  7.7.7.7:src_port1
+        # 192.168.0.2:src_port2  |  7.7.7.7:src_port2
 
     def debug(self, str):
         print(str)
