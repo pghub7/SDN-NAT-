@@ -301,10 +301,11 @@ class NatController(app_manager.RyuApp):
         # 192.168.0.1:src_port1  |  7.7.7.7:src_port1
         # 192.168.0.2:src_port2  |  7.7.7.7:src_port2
         # after changing packet src to routers ip then send to switch 
-        # add the rule(mapping) on the flow table (NAT Table) ? also maintain a mapping on the controller side so it remembers ? add it to nat_table object on controller first time
-        # Once the rule(mapping) is added to the flow table (NAT table) the switch will know how to handle it in the future
+        # add the rule(mapping) or flow entry on the flow table (NAT Table) ? also maintain a mapping on the controller side so it remembers ? add it to a nat_table object on controller first time?
+        # Once the rule(mapping) or flow entry is added to the flow table (NAT table) the switch will know how to handle it in the future
         # Once packet is sent out to the switch with this new router ip the switch should do some action(i.e send it to the router? how? get the mac address of the router? )
-
+        # what should the match be? what should the action be?  forward the packet on the port specified by the output action
+        # NOTE  If no output action and no group action were specified in an action set, the packet is dropped
 
     def debug(self, str):
         print(str)
