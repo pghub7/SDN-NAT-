@@ -297,9 +297,14 @@ class NatController(app_manager.RyuApp):
         # turn local src_ip into public routers ip 7.7.7.7 
         # ip 192.168.0.1 src_port 47182  to ip 4.4.1.2 dest_port 80
         # add maping to flow table 
-        # internal              |  external 
+        # internal               |  external 
         # 192.168.0.1:src_port1  |  7.7.7.7:src_port1
         # 192.168.0.2:src_port2  |  7.7.7.7:src_port2
+        # after changing packet src to routers ip then send to switch 
+        # add the rule(mapping) on the flow table (NAT Table) ? also maintain a mapping on the controller side so it remembers ? add it to nat_table object on controller first time
+        # Once the rule(mapping) is added to the flow table (NAT table) the switch will know how to handle it in the future
+        # Once packet is sent out to the switch with this new router ip the switch should do some action(i.e send it to the router? how? get the mac address of the router? )
+
 
     def debug(self, str):
         print(str)
