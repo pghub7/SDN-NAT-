@@ -279,7 +279,7 @@ class NatController(app_manager.RyuApp):
             # parser = of_packet.datapath.ofproto_parser
             # actions = [parser.OFPActionSetField(ipv4_src = '4.4.2.1'), parser.OFPActionSetField(tcp_src = 2)]
             # self.send_packet(of_packet.data, of_packet, 1, actions)
-            # self.send_arp_request(config.nat_internal_ip, of_packet, None, None)
+            self.send_arp_request(config.nat_internal_ip, of_packet, None, None)
 
         else :
             out_port = None
