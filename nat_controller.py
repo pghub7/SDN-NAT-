@@ -307,5 +307,7 @@ class NatController(app_manager.RyuApp):
         # what should the match be? what should the action be?  forward the packet on the port specified by the output action
         # NOTE  If no output action and no group action were specified in an action set, the packet is dropped
 
+        # Match: OFPMatch dest_mac == nat_internal_mac ='a2:00:00:11:22:44' Action: Send to router(7.7.7.1) by doing OFPP_FLOOD because we dont know the mac addr of the router then idk 
+
     def debug(self, str):
         print(str)
