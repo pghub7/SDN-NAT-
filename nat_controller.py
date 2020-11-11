@@ -294,20 +294,25 @@ class NatController(app_manager.RyuApp):
         #         self.add_flow(of_packet.datapath, match, actions)
         #     self.switch_forward(of_packet, data_packet)
         
-        # turn local src_ip into public routers ip 7.7.7.7 
-        # ip 192.168.0.1 src_port 47182  to ip 4.4.1.2 dest_port 80
-        # add maping to flow table 
-        # internal               |  external 
-        # 192.168.0.1:src_port1  |  7.7.7.7:src_port1
-        # 192.168.0.2:src_port2  |  7.7.7.7:src_port2
-        # after changing packet src to routers ip then send to switch 
-        # add the rule(mapping) or flow entry on the flow table (NAT Table) ? also maintain a mapping on the controller side so it remembers ? add it to a nat_table object on controller first time?
-        # Once the rule(mapping) or flow entry is added to the flow table (NAT table) the switch will know how to handle it in the future
-        # Once packet is sent out to the switch with this new router ip the switch should do some action(i.e send it to the router? how? get the mac address of the router? )
-        # what should the match be? what should the action be?  forward the packet on the port specified by the output action
-        # NOTE  If no output action and no group action were specified in an action set, the packet is dropped
+        dst_mac = data_packet[0].dst # mac addr of nat_internal
+        in_port = of_packet.match['in_port']
+        #out_port = self.switch_table[dst_mac] # port to send to (ie. the )
+        out_port = None
+        parser = of_packet.datapath.ofproto_parser
+        next_ip = data_packet[1].dst # ipv4 dest 4.4.*.*
+        ipv4_src = data_packet[1].src # ipv4 src 192.168.*.*
+        tcp_src = data_packet[2].src_port # tcp src port usually rand #
+        tcp_dst = data_packet[2].dst_port # tcp dst port usually 80
 
-        # Match: OFPMatch dest_mac == nat_internal_mac ='a2:00:00:11:22:44' Action: Send to router(7.7.7.1) by doing OFPP_FLOOD because we dont know the mac addr of the router then idk 
-
+        match = parser.OFPMatch(in_port=in_port, 
+                                eth_type=ether.ETH_TYPE_IP,
+                                ipv4_src= ipv4_src,
+                                ipv4_dst= next_ip,
+                                tcp_src = tcp_src,
+                                tcp_dst = tcp_dst
+                                )
+        actions = []
+        actions.append(parser.OFPActionSetField(ipv4_src=config.nat_gateway_ip))
+        self.router_forward(of_packet,data_packet, config.nat_gateway_ip, match, actions)
     def debug(self, str):
         print(str)
