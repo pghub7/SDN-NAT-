@@ -306,6 +306,7 @@ class NatController(app_manager.RyuApp):
 
         match = parser.OFPMatch(in_port=in_port, 
                                 eth_type=ether.ETH_TYPE_IP,
+                                ip_proto= 6,
                                 ipv4_src= ipv4_src,
                                 ipv4_dst= next_ip,
                                 tcp_src = tcp_src,
