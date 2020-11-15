@@ -23,7 +23,7 @@ class NatController(app_manager.RyuApp):
         self.switch_table = {}
         self.pending_arp = {}
         self.ports_in_use = {}
-        self.IDLE_TIME = 60
+        self.IDLE_TIME = 10
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def handle_packet_in(self, event):
@@ -110,7 +110,7 @@ class NatController(app_manager.RyuApp):
 
         # This runs after switch_forward so that the output action is included.
         if match is not None:
-            self.add_flow(of_packet.datapath, match, actions)
+            self.add_flow(of_packet.datapath, match, actions, data_packet)
 
     def send_packet(self, payload, of_packet, port, actions=None):
         '''Send a packet to the switch for processing/forwarding'''
@@ -131,7 +131,7 @@ class NatController(app_manager.RyuApp):
                                   data=payload)
         switch.send_msg(out)
 
-    def add_flow(self, switch, match, actions):
+    def add_flow(self, switch, match, actions, data_packet):
         '''Send a new flow (match+action) to be added to a switch OpenFlow table'''
 
         self.debug('Adding a new flow:')
@@ -139,6 +139,8 @@ class NatController(app_manager.RyuApp):
         self.debug(' - actions: %s' % actions)
         ofproto = switch.ofproto
         parser = switch.ofproto_parser
+        if self.is_tcp(data_packet):
+            self.IDLE_TIME = 0
 
         instructions = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         modification = parser.OFPFlowMod(switch,
@@ -304,7 +306,7 @@ class NatController(app_manager.RyuApp):
                     parser.OFPActionSetField(eth_src=config.nat_internal_mac),
                     parser.OFPActionSetField(eth_dst=dst_internal_host_mac)]
         self.switch_forward(of_packet, data_packet, actions)
-        self.add_flow(of_packet.datapath, match, actions)
+        self.add_flow(of_packet.datapath, match, actions, data_packet)
 
     def handle_incoming_internal_msg(self, of_packet, data_packet):
         '''Handles a packet with destination MAC equal to internal side of NAT router.'''
@@ -346,7 +348,7 @@ class NatController(app_manager.RyuApp):
                 parser = of_packet.datapath.ofproto_parser
                 match = parser.OFPMatch(in_port= of_packet.match['in_port'], eth_dst=dst_mac)
                 actions = [parser.OFPActionOutput(out_port)]
-                self.add_flow(of_packet.datapath, match, actions)
+                self.add_flow(of_packet.datapath, match, actions, data_packet)
             self.switch_forward(of_packet, data_packet)
 
     def debug(self, str):
