@@ -149,7 +149,7 @@ class NatController(app_manager.RyuApp):
         arp_src_ip = data_packet[1].src_ip
         arp_src_mac = data_packet[1].src_mac
         self.arp_table[arp_src_ip] = arp_src_mac
-        print("arp table: ", self.arp_table);
+        print("arp table: ", self.arp_table)
 
         # For any packets waiting for this ARP reply to arrive, re-forward them
         if arp_src_ip in self.pending_arp:
