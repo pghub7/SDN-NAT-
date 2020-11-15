@@ -32,14 +32,10 @@ class NatController(app_manager.RyuApp):
         of_packet = event.msg # openflow packet
         data_packet = packet.Packet(data=of_packet.data) # decapsulated packet
 
-
-        # print("############")
-        # print("arp table: ", self.arp_table)
-        # print("############\n")
         # Ignore IPv6 packets (not supported)
         if self.is_ipv6(data_packet):
             return
-        #print("verify topoMap: ", config.hostIPToMACMap)
+            
         self.debug('Handling packet: %s' % data_packet)
         self.debug('Reason: %s' % of_packet.reason)
 
@@ -97,7 +93,6 @@ class NatController(app_manager.RyuApp):
             self.send_arp_request(next_ip, of_packet, match, extra_actions)
             return
         dst_mac = self.arp_table[next_ip]
-        #dst_mac = config.hostIPToMACMap[next_ip]
         src_mac = config.nat_external_mac if next_ip == config.nat_gateway_ip \
                   else config.nat_internal_mac
 
@@ -160,16 +155,12 @@ class NatController(app_manager.RyuApp):
         if arp_src_ip in self.pending_arp:
             print("arp_src_ip", arp_src_ip, " is in self.pending_arp")
             for of_packet, match, actions in self.pending_arp[arp_src_ip]:
-                # if (arp_src_ip == config.nat_gateway_ip):
-                #     self.createPacket(of_packet, packet.Packet(data=of_packet.data), arp_src_ip)
-                # else :
                 self.router_forward(of_packet, packet.Packet(data=of_packet.data), arp_src_ip,
                                 match=match, extra_actions=actions)
             del self.pending_arp[arp_src_ip]
 
         if data_packet[1].opcode == 1:
             # ARP request
-            #self.send_arp_reply(of_packet, data_packet)
             if self.send_arp_reply(of_packet, data_packet) == None:
                 self.switch_forward(of_packet, data_packet)
         if data_packet[1].opcode == 2:
@@ -212,18 +203,6 @@ class NatController(app_manager.RyuApp):
         new_packet.add_protocol(arp_packet)
         new_packet.serialize()
         self.send_packet(new_packet, of_packet, of_packet.datapath.ofproto.OFPP_FLOOD)
-
-    def createPacket(self, of_packet, data_packet, gateway_ip):
-        eth_packet = ethernet.ethernet(dst = self.arp_table[gateway_ip],
-                                       src = data_packet[0].dst,
-                                       ethertype = data_packet[0].ethertype)
-        new_packet = packet.Packet()
-        new_packet.add_protocol(eth_packet)
-        new_packet.add_protocol(data_packet[1])
-        new_packet.add_protocol(data_packet[2])
-        new_packet.serialize()
-        print("\n\n#############################\n\n", "Verify new packet created:\n ", new_packet)
-        self.send_packet(new_packet, of_packet, self.switch_table[self.arp_table[gateway_ip]])
 
     def send_arp_reply(self, of_packet, data_packet):
         '''Builds and sends an ARP reply, if the IP corresponds to the switch'''
