@@ -11,16 +11,3 @@ nat_external_mac = 'a2:00:00:11:22:33'
 nat_internal_ip = '192.168.0.254'
 nat_internal_net = '192.168.0.0/16'
 nat_internal_mac = 'a2:00:00:11:22:44'
-
-hostIPToMACMap = {}
-#internal hosts
-for id in [1, 2, 3, 4]:
-    hostIP= '192.168.0.%d/16' % id
-    hostMac = '00:00:00:00:01:%02d' % id
-    hostIPToMACMap[hostIP.split('/')[0]] = hostMac
-
-#external hosts
-for id in [1, 2, 3, 4]:
-    hostIP = '4.4.%d.2/24' % id
-    hostMac = '00:00:00:00:02:%02d' % id
-    hostIPToMACMap[hostIP.split('/')[0]] = hostMac
